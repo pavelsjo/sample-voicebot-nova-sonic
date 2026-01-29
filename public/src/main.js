@@ -1309,7 +1309,26 @@ function createNovaIcon() {
 // Track rendered message count to avoid re-rendering
 let renderedMessageCount = 0;
 
+// Hide empty state when first message is added
+function hideEmptyState() {
+    const emptyState = document.getElementById('chat-empty-state');
+    if (emptyState && !emptyState.classList.contains('hidden')) {
+        emptyState.classList.add('hidden');
+    }
+}
+
+// Show empty state when chat is cleared
+function showEmptyState() {
+    const emptyState = document.getElementById('chat-empty-state');
+    if (emptyState) {
+        emptyState.classList.remove('hidden');
+    }
+}
+
 function createMessageElement(item) {
+    // Hide empty state when creating any message
+    hideEmptyState();
+    
     if (item.endOfConversation) {
         const endDiv = document.createElement('div');
         endDiv.className = 'message system';
@@ -1791,6 +1810,34 @@ function clearChatUI() {
     chatContainer.innerHTML = '';
     renderedMessageCount = 0;
     clearAllToolCards();
+    // Re-add empty state HTML
+    const emptyStateHTML = `
+        <div id="chat-empty-state" class="chat-empty-state">
+            <div class="empty-state-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    <circle cx="12" cy="10" r="1" fill="currentColor"></circle>
+                    <circle cx="8" cy="10" r="1" fill="currentColor"></circle>
+                    <circle cx="16" cy="10" r="1" fill="currentColor"></circle>
+                </svg>
+            </div>
+            <h3 class="empty-state-title">Ready to chat</h3>
+            <p class="empty-state-description">
+                Tap the microphone to start a voice conversation, or use the keyboard to type.
+            </p>
+            <div class="empty-state-hints">
+                <div class="hint-item">
+                    <span class="hint-icon">🎤</span>
+                    <span>Voice: Natural conversation</span>
+                </div>
+                <div class="hint-item">
+                    <span class="hint-icon">⌨️</span>
+                    <span>Text: Type your questions</span>
+                </div>
+            </div>
+        </div>
+    `;
+    chatContainer.innerHTML = emptyStateHTML;
 }
 
 function showUserThinkingIndicator() {

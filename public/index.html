@@ -263,7 +263,32 @@
             </div>
 
             <p class="voice-hint hidden">Tap to start conversation</p>
-            <div id="chat-container" class="chat-container"></div>
+            <div id="chat-container" class="chat-container">
+                <div id="chat-empty-state" class="chat-empty-state">
+                    <div class="empty-state-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            <circle cx="12" cy="10" r="1" fill="currentColor"></circle>
+                            <circle cx="8" cy="10" r="1" fill="currentColor"></circle>
+                            <circle cx="16" cy="10" r="1" fill="currentColor"></circle>
+                        </svg>
+                    </div>
+                    <h3 class="empty-state-title">Ready to chat</h3>
+                    <p class="empty-state-description">
+                        Tap the microphone to start a voice conversation, or use the keyboard to type.
+                    </p>
+                    <div class="empty-state-hints">
+                        <div class="hint-item">
+                            <span class="hint-icon">🎤</span>
+                            <span>Voice: Natural conversation</span>
+                        </div>
+                        <div class="hint-item">
+                            <span class="hint-icon">⌨️</span>
+                            <span>Text: Type your questions</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
             <!-- Typing Window -->
             <div id="typing-window" class="typing-window hidden">
