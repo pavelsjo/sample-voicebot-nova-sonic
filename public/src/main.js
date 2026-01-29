@@ -2240,10 +2240,44 @@ socket.on('error', (error) => {
     }
 });
 
+// Disconnect confirmation modal
+const disconnectModal = document.getElementById('disconnect-modal');
+const disconnectCancel = document.getElementById('disconnect-cancel');
+const disconnectConfirm = document.getElementById('disconnect-confirm');
+
+function showDisconnectModal() {
+    disconnectModal.classList.add('visible');
+}
+
+function hideDisconnectModal() {
+    disconnectModal.classList.remove('visible');
+}
+
+disconnectCancel.addEventListener('click', hideDisconnectModal);
+
+disconnectConfirm.addEventListener('click', () => {
+    hideDisconnectModal();
+    stopStreaming();
+});
+
+// Close modal on overlay click
+disconnectModal.addEventListener('click', (e) => {
+    if (e.target === disconnectModal) {
+        hideDisconnectModal();
+    }
+});
+
+// Close modal on Escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && disconnectModal.classList.contains('visible')) {
+        hideDisconnectModal();
+    }
+});
+
 // Voice button handler
 voiceBtn.addEventListener('click', () => {
     if (isStreaming) {
-        stopStreaming();
+        showDisconnectModal();
     } else {
         startStreaming();
     }
