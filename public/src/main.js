@@ -2196,8 +2196,28 @@ socket.on('streamInterrupted', (data) => {
     // Just log it for debugging
 });
 
+// Connection status indicator
+const connectionStatus = document.getElementById('connection-status');
+const connectionText = connectionStatus.querySelector('.connection-text');
+
+function updateConnectionStatus(status) {
+    connectionStatus.classList.remove('connected', 'disconnected', 'reconnecting');
+    connectionStatus.classList.add(status);
+    
+    const messages = {
+        connected: 'Connected',
+        disconnected: 'Offline',
+        reconnecting: 'Reconnecting...'
+    };
+    connectionText.textContent = messages[status];
+}
+
+// Initialize connection status
+updateConnectionStatus(socket.connected ? 'connected' : 'disconnected');
+
 socket.on('connect', () => {
     sessionInitialized = false;
+    updateConnectionStatus('connected');
 });
 
 socket.on('disconnect', () => {
@@ -2208,6 +2228,27 @@ socket.on('disconnect', () => {
     hideUserThinkingIndicator();
     hideAssistantThinkingIndicator();
     stopWaveformAnimation();
+    updateConnectionStatus('disconnected');
+});
+
+socket.io.on('reconnect_attempt', () => {
+    updateConnectionStatus('reconnecting');
+});
+
+socket.io.on('reconnect', () => {
+    updateConnectionStatus('connected');
+});
+
+// Browser online/offline events
+window.addEventListener('online', () => {
+    if (!socket.connected) {
+        updateConnectionStatus('reconnecting');
+        socket.connect();
+    }
+});
+
+window.addEventListener('offline', () => {
+    updateConnectionStatus('disconnected');
 });
 
 socket.on('error', (error) => {
