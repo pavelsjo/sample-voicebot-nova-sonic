@@ -1,19 +1,52 @@
 :root {
-    --primary: #a855f7;
-    --primary-dark: #9333ea;
-    --primary-light: #c084fc;
-    --bg-dark: #0a1628;
-    --bg-card: #0f1f3a;
-    --bg-input: #162544;
-    --bg-hover: #1e3a5f;
-    --text-primary: #ffffff;
-    --text-secondary: #8ba3c7;
-    --border-color: #1e3a5f;
-    --border-focus: #a855f7;
-    --success: #22c55e;
+    /* Color Palette - Based on Nova Sonic branding */
+    /* Slate Grays (neutral, warm) */
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1e293b;
+    --slate-900: #0f172a;
+    
+    /* Violet (primary - from Nova icon) */
+    --violet-50: #faf5ff;
+    --violet-100: #f3e8ff;
+    --violet-200: #e9d5ff;
+    --violet-300: #d8b4fe;
+    --violet-400: #c084fc;
+    --violet-500: #a855f7;
+    --violet-600: #9333ea;
+    --violet-700: #7c3aed;
+    --violet-800: #6d28d9;
+    --violet-900: #581c87;
+    
+    /* Pink accent (from Nova gradient) */
+    --pink-400: #f472b6;
+    --pink-500: #ec4899;
+    --pink-600: #db2777;
+    
+    /* Semantic colors */
+    --success: #10b981;
     --warning: #f59e0b;
     --error: #ef4444;
-    --accent-gradient: linear-gradient(135deg, #a855f7 0%, #6366f1 100%);
+    
+    /* Applied colors - Dark theme */
+    --primary: var(--violet-500);
+    --primary-dark: var(--violet-600);
+    --primary-light: var(--violet-400);
+    --bg-dark: var(--slate-900);
+    --bg-card: var(--slate-800);
+    --bg-input: var(--slate-700);
+    --bg-hover: var(--slate-600);
+    --text-primary: var(--slate-50);
+    --text-secondary: var(--slate-400);
+    --border-color: var(--slate-700);
+    --border-focus: var(--violet-500);
+    --accent-gradient: linear-gradient(135deg, var(--violet-500) 0%, var(--pink-500) 100%);
     
     /* Typography Scale - Minor Third (1.2) */
     --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -41,13 +74,13 @@
 }
 
 [data-theme="light"] {
-    --bg-dark: #f0f4f8;
-    --bg-card: #ffffff;
-    --bg-input: #e8eef4;
-    --bg-hover: #dce4ec;
-    --text-primary: #1a202c;
-    --text-secondary: #4a5568;
-    --border-color: #cbd5e0;
+    --bg-dark: var(--slate-100);
+    --bg-card: var(--slate-50);
+    --bg-input: var(--slate-200);
+    --bg-hover: var(--slate-300);
+    --text-primary: var(--slate-900);
+    --text-secondary: var(--slate-500);
+    --border-color: var(--slate-300);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -810,22 +843,22 @@ html, body {
 .voice-btn {
     width: 100px; height: 100px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #0a1628 0%, #162544 50%, #1e3a5f 100%);
-    border: 2px solid rgba(168, 85, 247, 0.4);
+    background: linear-gradient(135deg, var(--slate-900) 0%, var(--slate-800) 100%);
+    border: 2px solid var(--violet-500);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 0 30px rgba(168, 85, 247, 0.3), inset 0 0 40px rgba(168, 85, 247, 0.2);
+    box-shadow: 0 0 30px rgba(168, 85, 247, 0.2), inset 0 0 40px rgba(168, 85, 247, 0.1);
     z-index: 10;
     position: relative;
 }
 
 .voice-btn:hover { 
     transform: scale(1.05); 
-    border-color: rgba(168, 85, 247, 0.6);
-    box-shadow: 0 0 50px rgba(168, 85, 247, 0.5), inset 0 0 50px rgba(168, 85, 247, 0.3); 
+    border-color: var(--pink-500);
+    box-shadow: 0 0 40px rgba(236, 72, 153, 0.3), inset 0 0 50px rgba(168, 85, 247, 0.15); 
 }
 
 /* Idle state - subtle breathing animation */
@@ -835,11 +868,11 @@ html, body {
 
 @keyframes breathe {
     0%, 100% { 
-        box-shadow: 0 0 20px rgba(168, 85, 247, 0.2), inset 0 0 30px rgba(168, 85, 247, 0.15);
+        box-shadow: 0 0 20px rgba(168, 85, 247, 0.15), inset 0 0 30px rgba(168, 85, 247, 0.08);
         transform: scale(1);
     }
     50% { 
-        box-shadow: 0 0 35px rgba(168, 85, 247, 0.35), inset 0 0 40px rgba(168, 85, 247, 0.2);
+        box-shadow: 0 0 35px rgba(236, 72, 153, 0.25), inset 0 0 40px rgba(168, 85, 247, 0.12);
         transform: scale(1.02);
     }
 }
@@ -848,8 +881,8 @@ html, body {
 .voice-btn.connecting {
     border: 3px solid transparent;
     background: 
-        linear-gradient(135deg, #0a1628 0%, #162544 50%, #1e3a5f 100%) padding-box,
-        conic-gradient(from 0deg, var(--primary), var(--primary-light), var(--primary)) border-box;
+        linear-gradient(135deg, var(--slate-900) 0%, var(--slate-800) 100%) padding-box,
+        conic-gradient(from 0deg, var(--violet-500), var(--pink-500), var(--violet-500)) border-box;
     animation: spin-border 1s linear infinite;
 }
 
@@ -916,28 +949,28 @@ html, body {
     }
 }
 
-/* Speaking state - vibrant purple glow */
+/* Speaking state - vibrant violet-pink glow */
 .voice-btn.speaking {
-    border-color: var(--primary);
+    border-color: var(--pink-500);
     box-shadow: 
-        0 0 30px rgba(168, 85, 247, 0.5),
+        0 0 30px rgba(236, 72, 153, 0.4),
         0 0 60px rgba(168, 85, 247, 0.3),
-        inset 0 0 40px rgba(168, 85, 247, 0.2);
+        inset 0 0 40px rgba(168, 85, 247, 0.15);
     animation: speaking-glow 2s ease-in-out infinite;
 }
 
 @keyframes speaking-glow {
     0%, 100% { 
         box-shadow: 
-            0 0 30px rgba(168, 85, 247, 0.5),
+            0 0 30px rgba(236, 72, 153, 0.4),
             0 0 60px rgba(168, 85, 247, 0.3),
-            inset 0 0 40px rgba(168, 85, 247, 0.2);
+            inset 0 0 40px rgba(168, 85, 247, 0.15);
     }
     50% { 
         box-shadow: 
-            0 0 50px rgba(168, 85, 247, 0.7),
+            0 0 50px rgba(236, 72, 153, 0.6),
             0 0 80px rgba(168, 85, 247, 0.4),
-            inset 0 0 60px rgba(168, 85, 247, 0.3);
+            inset 0 0 60px rgba(168, 85, 247, 0.2);
     }
 }
 
@@ -1328,8 +1361,8 @@ html, body {
 
 /* Tool Usage Card Styles */
 .tool-card {
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%);
-    border: 1px solid rgba(168, 85, 247, 0.3);
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.08) 0%, rgba(236, 72, 153, 0.08) 100%);
+    border: 1px solid rgba(168, 85, 247, 0.25);
     border-radius: 8px;
     padding: 0;
     max-width: 70%;
@@ -1358,7 +1391,7 @@ html, body {
 }
 
 .tool-header:hover {
-    background: rgba(168, 85, 247, 0.15);
+    background: rgba(168, 85, 247, 0.12);
 }
 
 .tool-icon {
