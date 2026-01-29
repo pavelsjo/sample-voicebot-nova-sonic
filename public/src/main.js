@@ -8,6 +8,7 @@ const socket = io();
 const voiceBtn = document.getElementById('voice-btn');
 const micIcon = voiceBtn.querySelector('.mic-icon');
 const stopIcon = voiceBtn.querySelector('.stop-icon');
+const voiceStatus = document.getElementById('voice-status');
 const chatContainer = document.getElementById('chat-container');
 const voiceHint = document.querySelector('.voice-hint');
 const waveformCanvas = document.getElementById('waveform-canvas');
@@ -15,6 +16,49 @@ const ctx = waveformCanvas.getContext('2d');
 const ringCanvas = document.getElementById('ring-canvas');
 const ringCtx = ringCanvas.getContext('2d');
 const themeToggle = document.getElementById('theme-toggle');
+
+// Voice button state management
+const VoiceState = {
+    IDLE: 'idle',
+    CONNECTING: 'connecting', 
+    LISTENING: 'listening',
+    PROCESSING: 'processing',
+    SPEAKING: 'speaking'
+};
+
+let currentVoiceState = VoiceState.IDLE;
+
+function setVoiceState(state) {
+    currentVoiceState = state;
+    
+    // Remove all state classes
+    voiceBtn.classList.remove('idle', 'connecting', 'listening', 'processing', 'speaking', 'active');
+    voiceStatus.classList.remove('connecting', 'listening', 'processing', 'speaking');
+    
+    // Add new state class
+    voiceBtn.classList.add(state);
+    
+    // Update status text
+    const statusMessages = {
+        [VoiceState.IDLE]: '',
+        [VoiceState.CONNECTING]: '<span class="voice-status-dot"></span>Connecting...',
+        [VoiceState.LISTENING]: '<span class="voice-status-dot"></span>Listening...',
+        [VoiceState.PROCESSING]: '<span class="voice-status-dot"></span>Thinking...',
+        [VoiceState.SPEAKING]: '<span class="voice-status-dot"></span>Speaking...'
+    };
+    
+    voiceStatus.innerHTML = statusMessages[state];
+    voiceStatus.className = 'voice-status ' + state;
+    
+    // Update icons
+    if (state === VoiceState.IDLE) {
+        micIcon.classList.remove('hidden');
+        stopIcon.classList.add('hidden');
+    } else {
+        micIcon.classList.add('hidden');
+        stopIcon.classList.remove('hidden');
+    }
+}
 
 // Settings elements
 const settingsToggle = document.getElementById('settings-toggle');
@@ -937,6 +981,9 @@ const responseTimingToSensitivity = {
 async function initializeSession() {
     if (sessionInitialized) return;
 
+    // Show connecting state
+    setVoiceState(VoiceState.CONNECTING);
+
     try {
         await new Promise((resolve, reject) => {
             const timeout = setTimeout(() => reject(new Error('Connection timeout')), 10000);
@@ -1049,9 +1096,7 @@ async function startStreaming() {
         }
 
         isStreaming = true;
-        voiceBtn.classList.add('active');
-        micIcon.classList.add('hidden');
-        stopIcon.classList.remove('hidden');
+        setVoiceState(VoiceState.LISTENING);
         voiceHint.textContent = 'Tap to stop';
         
         // Disable settings during conversation
@@ -1104,8 +1149,7 @@ function stopStreaming() {
     }
 
     voiceBtn.classList.remove('active');
-    micIcon.classList.remove('hidden');
-    stopIcon.classList.add('hidden');
+    setVoiceState(VoiceState.IDLE);
     voiceHint.textContent = 'Tap to start conversation';
 
     // Stop waveform animation
@@ -1721,6 +1765,8 @@ socket.on('textOutput', (data) => {
         transcriptionReceived = true;
         handleTextOutput({ role: data.role, content: data.content });
         showAssistantThinkingIndicator();
+        // User finished speaking, assistant is processing
+        setVoiceState(VoiceState.PROCESSING);
     } else if (role === 'ASSISTANT') {
         // Only show speculative text (real-time), skip final text (avoid duplicates)
         if (displayAssistantText) {
@@ -1732,6 +1778,11 @@ socket.on('textOutput', (data) => {
 socket.on('audioOutput', (data) => {
     if (data.content) {
         try {
+            // Update state to speaking when receiving audio
+            if (currentVoiceState !== VoiceState.SPEAKING) {
+                setVoiceState(VoiceState.SPEAKING);
+            }
+            
             const audioData = base64ToFloat32Array(data.content);
             audioPlayer.playAudio(audioData);
 
@@ -1824,6 +1875,11 @@ socket.on('contentEnd', (data) => {
             isRingFadingOut = true;
             targetAssistantAudioLevel = 0;
             
+            // Return to listening state after speaking ends
+            if (isStreaming) {
+                setVoiceState(VoiceState.LISTENING);
+            }
+            
             // Reset tracking after fade completes
             setTimeout(() => {
                 speechStartTime = 0;
@@ -1839,6 +1895,11 @@ socket.on('bargeIn', (data) => {
     console.log('Barge-in event received:', data);
     audioPlayer.bargeIn();
     chatHistoryManager.markLastAssistantInterrupted();
+    
+    // Return to listening state on barge-in
+    if (isStreaming) {
+        setVoiceState(VoiceState.LISTENING);
+    }
     
     // Immediately stop the ring animation on barge-in
     if (audioFadeTimer) {
