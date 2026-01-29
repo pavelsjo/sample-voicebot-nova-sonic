@@ -32,6 +32,25 @@
             </div>
         </header>
 
+        <!-- Disconnect Confirmation Modal -->
+        <div id="disconnect-modal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <div class="modal-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                </div>
+                <h3 class="modal-title">End conversation?</h3>
+                <p class="modal-message">Your current session will be disconnected.</p>
+                <div class="modal-actions">
+                    <button id="disconnect-cancel" class="modal-btn modal-btn-secondary">Cancel</button>
+                    <button id="disconnect-confirm" class="modal-btn modal-btn-primary">End Session</button>
+                </div>
+            </div>
+        </div>
+
         <div id="settings-overlay" class="settings-overlay"></div>
         <div id="settings-panel" class="settings-panel">
             <div class="settings-header">
