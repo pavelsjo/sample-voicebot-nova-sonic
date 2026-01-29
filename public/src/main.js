@@ -167,9 +167,54 @@ let sessionStartTime = null;
 let sessionTimeoutTimer = null;
 let sessionWarningTimer = null;
 
+// Session display timer
+let sessionDisplayTimer = null;
+const sessionTimerElement = document.getElementById('session-timer');
+const sessionTimerDisplay = document.getElementById('session-time');
+
+function formatSessionTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+function startSessionDisplayTimer() {
+    if (!sessionTimerElement || !sessionTimerDisplay) return;
+    
+    sessionTimerElement.classList.remove('hidden');
+    sessionTimerElement.classList.add('active');
+    sessionTimerDisplay.textContent = '0:00';
+    
+    sessionDisplayTimer = setInterval(() => {
+        if (sessionStartTime) {
+            const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+            sessionTimerDisplay.textContent = formatSessionTime(elapsed);
+            
+            // Warning state at 6 minutes
+            if (elapsed >= 360) {
+                sessionTimerElement.classList.add('warning');
+            }
+        }
+    }, 1000);
+}
+
+function stopSessionDisplayTimer() {
+    if (sessionDisplayTimer) {
+        clearInterval(sessionDisplayTimer);
+        sessionDisplayTimer = null;
+    }
+    if (sessionTimerElement) {
+        sessionTimerElement.classList.add('hidden');
+        sessionTimerElement.classList.remove('active', 'warning');
+    }
+}
+
 function startSessionTimers() {
     clearSessionTimers();
     sessionStartTime = Date.now();
+    
+    // Start display timer
+    startSessionDisplayTimer();
     
     // Warning timer at 6 minutes
     sessionWarningTimer = setTimeout(() => {
@@ -192,6 +237,7 @@ function clearSessionTimers() {
         sessionWarningTimer = null;
     }
     sessionStartTime = null;
+    stopSessionDisplayTimer();
 }
 
 function showSessionWarning() {
