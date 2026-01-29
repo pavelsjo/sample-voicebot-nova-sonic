@@ -29,7 +29,44 @@ export class WaveformRenderer {
         this.totalAudioDuration = 0;
         this.audioFadeTimer = null;
 
+        // Particles system
+        this.particles = [];
+        this.maxParticles = 30;
+
+        // Visual state
+        this.visualState = 'idle'; // idle, listening, speaking
+        this.stateTransition = 0;
+
         this.initCanvas();
+        this.initParticles();
+    }
+
+    initParticles() {
+        this.particles = [];
+        for (let i = 0; i < this.maxParticles; i++) {
+            this.particles.push(this.createParticle());
+        }
+    }
+
+    createParticle() {
+        const rect = this.waveformCanvas.getBoundingClientRect();
+        return {
+            x: Math.random() * rect.width,
+            y: Math.random() * rect.height,
+            vx: (Math.random() - 0.5) * 0.5,
+            vy: (Math.random() - 0.5) * 0.5,
+            size: Math.random() * 3 + 1,
+            alpha: Math.random() * 0.5 + 0.2,
+            hue: Math.random() * 60 + 250, // Purple-blue range
+            pulseOffset: Math.random() * Math.PI * 2
+        };
+    }
+
+    setVisualState(state) {
+        if (this.visualState !== state) {
+            this.visualState = state;
+            this.stateTransition = 0;
+        }
     }
 
     initCanvas() {
@@ -74,6 +111,8 @@ export class WaveformRenderer {
         this.totalAudioDuration = 0;
         this.ringFadeAlpha = 0;
         this.isRingFadingOut = false;
+        this.visualState = 'idle';
+        this.stateTransition = 0;
 
         // Clear canvases
         const rect = this.waveformCanvas.getBoundingClientRect();
@@ -170,23 +209,103 @@ export class WaveformRenderer {
         const assistantSmoothing = effectiveTargetAssistantLevel < this.assistantAudioLevel ? 0.03 : 0.15;
         this.assistantAudioLevel += (effectiveTargetAssistantLevel - this.assistantAudioLevel) * assistantSmoothing;
 
+        // Update state transition
+        this.stateTransition = Math.min(1, this.stateTransition + 0.02);
+
         const userLevel = this.audioLevel;
         const baseAmplitude = 1 + userLevel * 59;
         const vibrationIntensity = 0.005 + userLevel * 0.995;
 
+        // Draw ambient background glow
+        this.drawAmbientGlow(width, height, time, userLevel);
+
+        // Draw and update particles
+        this.updateAndDrawParticles(width, height, time, userLevel);
+
+        // Draw main waveform with reflection
         this.drawHorizontalWave(width, centerY, baseAmplitude, time, userLevel, vibrationIntensity);
+
+        // Draw circular ring
         this.drawCircularRing(time);
 
         this.animationId = requestAnimationFrame(() => this.animate());
+    }
+
+    drawAmbientGlow(width, height, time, level) {
+        if (level < 0.01 && this.assistantAudioLevel < 0.01) return;
+
+        const combinedLevel = Math.max(level, this.assistantAudioLevel * 0.7);
+        const pulse = Math.sin(time * 2) * 0.3 + 0.7;
+        const alpha = combinedLevel * 0.15 * pulse;
+
+        // Determine color based on state
+        let hue = 270; // Purple default
+        if (this.visualState === 'listening') {
+            hue = 140; // Green
+        } else if (this.visualState === 'speaking') {
+            hue = 270; // Purple
+        }
+
+        const gradient = this.ctx.createRadialGradient(
+            width / 2, height / 2, 0,
+            width / 2, height / 2, Math.max(width, height) * 0.6
+        );
+        gradient.addColorStop(0, `hsla(${hue}, 80%, 50%, ${alpha})`);
+        gradient.addColorStop(0.5, `hsla(${hue}, 70%, 40%, ${alpha * 0.5})`);
+        gradient.addColorStop(1, 'transparent');
+
+        this.ctx.fillStyle = gradient;
+        this.ctx.fillRect(0, 0, width, height);
+    }
+
+    updateAndDrawParticles(width, height, time, level) {
+        const combinedLevel = Math.max(level, this.assistantAudioLevel * 0.5);
+        if (combinedLevel < 0.02) return;
+
+        const centerY = height / 2;
+
+        this.particles.forEach(p => {
+            // Update position with audio reactivity
+            const audioInfluence = combinedLevel * 2;
+            p.x += p.vx + Math.sin(time + p.pulseOffset) * audioInfluence;
+            p.y += p.vy + Math.cos(time * 0.7 + p.pulseOffset) * audioInfluence * 0.5;
+
+            // Attract towards center when audio is active
+            const dx = width / 2 - p.x;
+            const dy = centerY - p.y;
+            p.x += dx * 0.001 * combinedLevel;
+            p.y += dy * 0.002 * combinedLevel;
+
+            // Wrap around edges
+            if (p.x < 0) p.x = width;
+            if (p.x > width) p.x = 0;
+            if (p.y < 0) p.y = height;
+            if (p.y > height) p.y = 0;
+
+            // Draw particle
+            const pulse = Math.sin(time * 3 + p.pulseOffset) * 0.5 + 0.5;
+            const size = p.size * (1 + combinedLevel * 2 * pulse);
+            const alpha = p.alpha * combinedLevel * (0.5 + pulse * 0.5);
+
+            this.ctx.beginPath();
+            this.ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
+            this.ctx.fillStyle = `hsla(${p.hue + time * 10}, 80%, 70%, ${alpha})`;
+            this.ctx.fill();
+
+            // Glow effect
+            this.ctx.beginPath();
+            this.ctx.arc(p.x, p.y, size * 2, 0, Math.PI * 2);
+            this.ctx.fillStyle = `hsla(${p.hue + time * 10}, 80%, 60%, ${alpha * 0.3})`;
+            this.ctx.fill();
+        });
     }
 
     drawHorizontalWave(width, centerY, amplitude, time, level, vibrationIntensity) {
         const freq = 0.012;
         const phase = time * 4;
 
-        this.ctx.beginPath();
-        this.ctx.moveTo(0, centerY);
-
+        // Calculate wave points once for both main and reflection
+        const wavePoints = [];
         for (let x = 0; x <= width; x += 1) {
             const wave1 = Math.sin(x * freq + phase) * amplitude;
             const wave2 = Math.sin(x * freq * 2.3 + phase * 2.5) * amplitude * 0.6;
@@ -201,9 +320,9 @@ export class WaveformRenderer {
             const chaos2 = Math.cos(x * 0.35 + time * 55) * Math.sin(time * 80) * amplitude * 0.25 * level;
             const spikes = Math.sin(x * 0.8 + time * 90) * amplitude * 0.15 * vibrationIntensity;
 
-            const y = centerY + wave1 + wave2 + wave3 + vibration + microVibration + 
-                      bounce + bounce2 + rapidPulse + jitter + chaos + chaos2 + spikes;
-            this.ctx.lineTo(x, y);
+            const offset = wave1 + wave2 + wave3 + vibration + microVibration + 
+                          bounce + bounce2 + rapidPulse + jitter + chaos + chaos2 + spikes;
+            wavePoints.push({ x, offset });
         }
 
         this.hueRotation = (this.hueRotation + 0.5) % 360;
@@ -217,6 +336,35 @@ export class WaveformRenderer {
         gradient.addColorStop(0.33, `hsla(${hue2}, 100%, 65%, ${alpha})`);
         gradient.addColorStop(0.66, `hsla(${hue3}, 100%, 60%, ${alpha})`);
         gradient.addColorStop(1, `hsla(${(hue1 + 300) % 360}, 100%, 65%, ${alpha})`);
+
+        // Draw reflection first (behind main wave)
+        if (level > 0.05) {
+            this.ctx.save();
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, centerY);
+            wavePoints.forEach(p => {
+                this.ctx.lineTo(p.x, centerY - p.offset * 0.4); // Inverted and smaller
+            });
+
+            const reflectionAlpha = level * 0.25;
+            const reflectionGradient = this.ctx.createLinearGradient(0, centerY, 0, centerY - 40);
+            reflectionGradient.addColorStop(0, `hsla(${hue2}, 80%, 60%, ${reflectionAlpha})`);
+            reflectionGradient.addColorStop(1, `hsla(${hue2}, 80%, 60%, 0)`);
+
+            this.ctx.strokeStyle = reflectionGradient;
+            this.ctx.lineWidth = 1 + level;
+            this.ctx.globalAlpha = 0.4;
+            this.ctx.filter = 'blur(2px)';
+            this.ctx.stroke();
+            this.ctx.restore();
+        }
+
+        // Draw main wave
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, centerY);
+        wavePoints.forEach(p => {
+            this.ctx.lineTo(p.x, centerY + p.offset);
+        });
 
         this.ctx.save();
         this.ctx.shadowColor = `hsla(${hue2}, 100%, 60%, ${0.4 + level * 0.4})`;

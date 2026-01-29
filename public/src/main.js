@@ -120,6 +120,10 @@ let targetAssistantAudioLevel = 0;
 let hueRotation = 0;
 let isAnimating = false;
 
+// Particle system for ambient effect
+let particles = [];
+const MAX_PARTICLES = 25;
+
 // Audio playback duration tracking
 let speechStartTime = 0;
 let totalAudioDuration = 0;
@@ -701,6 +705,29 @@ function initWaveformCanvas() {
     ringCanvas.height = ringSize * dpr;
     ringCtx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
     ringCtx.scale(dpr, dpr);
+
+    // Initialize particles
+    initParticles(rect.width, rect.height);
+}
+
+function initParticles(width, height) {
+    particles = [];
+    for (let i = 0; i < MAX_PARTICLES; i++) {
+        particles.push(createParticle(width, height));
+    }
+}
+
+function createParticle(width, height) {
+    return {
+        x: Math.random() * width,
+        y: Math.random() * height,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        size: Math.random() * 2.5 + 0.5,
+        alpha: Math.random() * 0.4 + 0.1,
+        hue: Math.random() * 60 + 250, // Purple-blue range
+        pulseOffset: Math.random() * Math.PI * 2
+    };
 }
 
 function startWaveformAnimation() {
@@ -763,6 +790,12 @@ function animateWaveform() {
     // Vibration intensity - almost completely still when idle
     const vibrationIntensity = 0.005 + userLevel * 0.995;
 
+    // Draw ambient glow background when audio is active
+    drawAmbientGlow(ctx, width, height, time, userLevel, assistantAudioLevel);
+
+    // Draw floating particles
+    drawParticles(ctx, width, height, time, userLevel, assistantAudioLevel);
+
     // Draw single vibrating line with heavy glow (user mic only)
     drawSingleGlowingWave(ctx, width, centerY, baseAmplitude, time, userLevel, vibrationIntensity);
     
@@ -794,6 +827,73 @@ function animateWaveform() {
     }
 
     animationId = requestAnimationFrame(animateWaveform);
+}
+
+// Draw ambient glow background when audio is active
+function drawAmbientGlow(ctx, width, height, time, userLevel, assistantLevel) {
+    const combinedLevel = Math.max(userLevel, assistantLevel * 0.7);
+    if (combinedLevel < 0.02) return;
+
+    const pulse = Math.sin(time * 2) * 0.3 + 0.7;
+    const alpha = combinedLevel * 0.12 * pulse;
+
+    // Color based on who's active - green for user, purple for assistant
+    const hue = userLevel > assistantLevel ? 140 : 270;
+
+    const gradient = ctx.createRadialGradient(
+        width / 2, height / 2, 0,
+        width / 2, height / 2, Math.max(width, height) * 0.5
+    );
+    gradient.addColorStop(0, `hsla(${hue}, 70%, 50%, ${alpha})`);
+    gradient.addColorStop(0.5, `hsla(${hue}, 60%, 40%, ${alpha * 0.4})`);
+    gradient.addColorStop(1, 'transparent');
+
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, width, height);
+}
+
+// Draw floating particles that react to audio
+function drawParticles(ctx, width, height, time, userLevel, assistantLevel) {
+    const combinedLevel = Math.max(userLevel, assistantLevel * 0.5);
+    if (combinedLevel < 0.03) return;
+
+    const centerY = height / 2;
+
+    particles.forEach(p => {
+        // Update position with audio reactivity
+        const audioInfluence = combinedLevel * 1.5;
+        p.x += p.vx + Math.sin(time + p.pulseOffset) * audioInfluence;
+        p.y += p.vy + Math.cos(time * 0.7 + p.pulseOffset) * audioInfluence * 0.4;
+
+        // Gentle attraction towards center when audio is active
+        const dx = width / 2 - p.x;
+        const dy = centerY - p.y;
+        p.x += dx * 0.0008 * combinedLevel;
+        p.y += dy * 0.0015 * combinedLevel;
+
+        // Wrap around edges
+        if (p.x < 0) p.x = width;
+        if (p.x > width) p.x = 0;
+        if (p.y < 0) p.y = height;
+        if (p.y > height) p.y = 0;
+
+        // Draw particle with pulsing effect
+        const pulse = Math.sin(time * 3 + p.pulseOffset) * 0.5 + 0.5;
+        const size = p.size * (1 + combinedLevel * 1.5 * pulse);
+        const alpha = p.alpha * combinedLevel * (0.6 + pulse * 0.4);
+
+        // Main particle
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${p.hue + time * 8}, 75%, 70%, ${alpha})`;
+        ctx.fill();
+
+        // Soft glow around particle
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, size * 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${p.hue + time * 8}, 75%, 60%, ${alpha * 0.25})`;
+        ctx.fill();
+    });
 }
 
 function drawSingleGlowingWave(ctx, width, centerY, amplitude, time, level, vibrationIntensity) {
