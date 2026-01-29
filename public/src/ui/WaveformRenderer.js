@@ -57,7 +57,7 @@ export class WaveformRenderer {
             vy: (Math.random() - 0.5) * 0.5,
             size: Math.random() * 3 + 1,
             alpha: Math.random() * 0.5 + 0.2,
-            hue: Math.random() * 60 + 250, // Purple-blue range
+            hue: Math.random() * 60 + 270, // Violet-pink range (Nova colors)
             pulseOffset: Math.random() * Math.PI * 2
         };
     }
@@ -238,20 +238,20 @@ export class WaveformRenderer {
         const pulse = Math.sin(time * 2) * 0.3 + 0.7;
         const alpha = combinedLevel * 0.15 * pulse;
 
-        // Determine color based on state
-        let hue = 270; // Purple default
+        // Nova colors: violet (270) to pink (330)
+        let hue = 270; // Violet default
         if (this.visualState === 'listening') {
-            hue = 140; // Green
+            hue = 160; // Emerald for listening
         } else if (this.visualState === 'speaking') {
-            hue = 270; // Purple
+            hue = 300; // Pink-violet for speaking
         }
 
         const gradient = this.ctx.createRadialGradient(
             width / 2, height / 2, 0,
             width / 2, height / 2, Math.max(width, height) * 0.6
         );
-        gradient.addColorStop(0, `hsla(${hue}, 80%, 50%, ${alpha})`);
-        gradient.addColorStop(0.5, `hsla(${hue}, 70%, 40%, ${alpha * 0.5})`);
+        gradient.addColorStop(0, `hsla(${hue}, 70%, 55%, ${alpha})`);
+        gradient.addColorStop(0.5, `hsla(${hue}, 60%, 45%, ${alpha * 0.5})`);
         gradient.addColorStop(1, 'transparent');
 
         this.ctx.fillStyle = gradient;
@@ -325,17 +325,17 @@ export class WaveformRenderer {
             wavePoints.push({ x, offset });
         }
 
-        this.hueRotation = (this.hueRotation + 0.5) % 360;
-        const hue1 = this.hueRotation;
-        const hue2 = (this.hueRotation + 60) % 360;
-        const hue3 = (this.hueRotation + 180) % 360;
+        this.hueRotation = (this.hueRotation + 0.3) % 60; // Slower rotation within violet-pink range
+        const hue1 = 270 + this.hueRotation; // Violet base
+        const hue2 = 300 + this.hueRotation * 0.5; // Pink-violet
+        const hue3 = 330; // Pink accent
 
         const gradient = this.ctx.createLinearGradient(0, 0, width, 0);
         const alpha = 0.7 + level * 0.3;
-        gradient.addColorStop(0, `hsla(${hue1}, 100%, 60%, ${alpha})`);
-        gradient.addColorStop(0.33, `hsla(${hue2}, 100%, 65%, ${alpha})`);
-        gradient.addColorStop(0.66, `hsla(${hue3}, 100%, 60%, ${alpha})`);
-        gradient.addColorStop(1, `hsla(${(hue1 + 300) % 360}, 100%, 65%, ${alpha})`);
+        gradient.addColorStop(0, `hsla(${hue1}, 75%, 60%, ${alpha})`);
+        gradient.addColorStop(0.33, `hsla(${hue2}, 70%, 65%, ${alpha})`);
+        gradient.addColorStop(0.66, `hsla(${hue3}, 75%, 60%, ${alpha})`);
+        gradient.addColorStop(1, `hsla(${hue1}, 70%, 65%, ${alpha})`);
 
         // Draw reflection first (behind main wave)
         if (level > 0.05) {
@@ -367,7 +367,7 @@ export class WaveformRenderer {
         });
 
         this.ctx.save();
-        this.ctx.shadowColor = `hsla(${hue2}, 100%, 60%, ${0.4 + level * 0.4})`;
+        this.ctx.shadowColor = `hsla(${hue2}, 75%, 60%, ${0.4 + level * 0.4})`;
         this.ctx.shadowBlur = 25 + level * 40;
         this.ctx.strokeStyle = gradient;
         this.ctx.lineWidth = 2 + level * 2;
@@ -375,11 +375,11 @@ export class WaveformRenderer {
         this.ctx.lineJoin = 'round';
         this.ctx.stroke();
 
-        this.ctx.shadowColor = `hsla(${hue1}, 100%, 70%, ${0.5 + level * 0.3})`;
+        this.ctx.shadowColor = `hsla(${hue1}, 70%, 70%, ${0.5 + level * 0.3})`;
         this.ctx.shadowBlur = 15 + level * 25;
         this.ctx.stroke();
 
-        this.ctx.shadowColor = `hsla(${hue3}, 100%, 80%, ${0.6 + level * 0.4})`;
+        this.ctx.shadowColor = `hsla(${hue3}, 75%, 75%, ${0.6 + level * 0.4})`;
         this.ctx.shadowBlur = 8 + level * 15;
         this.ctx.lineWidth = 1.5 + level * 1.5;
         this.ctx.stroke();
@@ -413,8 +413,10 @@ export class WaveformRenderer {
 
         const buttonRadius = 50;
         const ringRadius = buttonRadius + 12 + level * 15;
-        const baseHue = 220;
-        const hue = level > 0.1 ? (time * 50) % 360 : baseHue;
+        
+        // Nova colors: violet (270) to pink (330)
+        const baseHue = 270;
+        const hue = level > 0.1 ? 270 + (Math.sin(time * 2) * 30) : baseHue; // Oscillate between violet and pink
         const alpha = (0.6 + level * 0.4) * this.ringFadeAlpha;
 
         const segments = 120;
@@ -437,19 +439,22 @@ export class WaveformRenderer {
         this.ringCtx.closePath();
 
         this.ringCtx.save();
-        this.ringCtx.shadowColor = `hsla(${hue}, 100%, 60%, ${alpha * 0.8})`;
+        // Violet glow
+        this.ringCtx.shadowColor = `hsla(${hue}, 80%, 60%, ${alpha * 0.8})`;
         this.ringCtx.shadowBlur = 30 + level * 50;
-        this.ringCtx.strokeStyle = `hsla(${hue}, 100%, 65%, ${alpha})`;
+        this.ringCtx.strokeStyle = `hsla(${hue}, 75%, 65%, ${alpha})`;
         this.ringCtx.lineWidth = 2 + level * 3;
         this.ringCtx.stroke();
 
-        const hue2 = level > 0.1 ? (hue + 60) % 360 : baseHue;
-        this.ringCtx.shadowColor = `hsla(${hue2}, 100%, 60%, ${alpha * 0.6})`;
+        // Pink accent
+        const hue2 = 330; // Pink
+        this.ringCtx.shadowColor = `hsla(${hue2}, 80%, 60%, ${alpha * 0.6})`;
         this.ringCtx.shadowBlur = 20 + level * 35;
         this.ringCtx.stroke();
 
-        const hue3 = level > 0.1 ? (hue + 120) % 360 : baseHue;
-        this.ringCtx.shadowColor = `hsla(${hue3}, 100%, 70%, ${alpha * 0.7})`;
+        // Light violet highlight
+        const hue3 = 280;
+        this.ringCtx.shadowColor = `hsla(${hue3}, 70%, 70%, ${alpha * 0.7})`;
         this.ringCtx.shadowBlur = 10 + level * 20;
         this.ringCtx.lineWidth = 1 + level * 2;
         this.ringCtx.stroke();
