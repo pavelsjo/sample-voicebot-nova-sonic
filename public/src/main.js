@@ -1245,6 +1245,9 @@ async function startStreaming() {
         setVoiceState(VoiceState.LISTENING);
         voiceHint.textContent = 'Tap to stop';
         
+        // Hide empty state when session starts
+        hideEmptyState();
+        
         // Disable settings during conversation
         setSettingsDisabled(true);
 
