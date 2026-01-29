@@ -237,18 +237,26 @@ html, body {
     cursor: pointer;
     border: 2px solid var(--border-color);
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 6px;
 }
 
-.theme-toggle::before {
-    content: '🌙';
-    position: absolute;
-    left: 4px; top: 50%;
-    transform: translateY(-50%);
-    font-size: 12px;
+.theme-icon {
+    color: var(--text-secondary);
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+    z-index: 1;
 }
 
-.theme-toggle::after {
-    content: '';
+.moon-icon { opacity: 1; }
+.sun-icon { opacity: 0.4; }
+
+[data-theme="light"] .moon-icon { opacity: 0.4; }
+[data-theme="light"] .sun-icon { opacity: 1; }
+
+.theme-toggle-knob {
     position: absolute;
     right: 4px; top: 50%;
     transform: translateY(-50%);
@@ -258,8 +266,7 @@ html, body {
     transition: all 0.3s ease;
 }
 
-[data-theme="light"] .theme-toggle::before { content: '☀️'; left: auto; right: 4px; }
-[data-theme="light"] .theme-toggle::after { right: auto; left: 4px; }
+[data-theme="light"] .theme-toggle-knob { right: auto; left: 4px; }
 
 /* Disconnect Confirmation Modal */
 .modal-overlay {
@@ -770,7 +777,7 @@ html, body {
     width: 100px; height: 100px;
     border-radius: 50%;
     background: linear-gradient(135deg, #0a1628 0%, #162544 50%, #1e3a5f 100%);
-    border: 3px solid transparent;
+    border: 2px solid rgba(168, 85, 247, 0.4);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -783,6 +790,7 @@ html, body {
 
 .voice-btn:hover { 
     transform: scale(1.05); 
+    border-color: rgba(168, 85, 247, 0.6);
     box-shadow: 0 0 50px rgba(168, 85, 247, 0.5), inset 0 0 50px rgba(168, 85, 247, 0.3); 
 }
 
@@ -1030,7 +1038,15 @@ html, body {
 }
 
 .hint-icon {
-    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-primary);
+}
+
+.hint-icon svg {
+    width: 16px;
+    height: 16px;
 }
 
 .message {
