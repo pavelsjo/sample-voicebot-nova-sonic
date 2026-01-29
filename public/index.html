@@ -33,16 +33,16 @@
         </header>
 
         <!-- Disconnect Confirmation Modal -->
-        <div id="disconnect-modal" class="modal-overlay">
+        <div id="disconnect-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
             <div class="modal-content">
-                <div class="modal-icon">
+                <div class="modal-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"></circle>
                         <line x1="12" y1="8" x2="12" y2="12"></line>
                         <line x1="12" y1="16" x2="12.01" y2="16"></line>
                     </svg>
                 </div>
-                <h3 class="modal-title">End conversation?</h3>
+                <h3 id="modal-title" class="modal-title">End conversation?</h3>
                 <p class="modal-message">Your current session will be disconnected.</p>
                 <div class="modal-actions">
                     <button id="disconnect-cancel" class="modal-btn modal-btn-secondary">Cancel</button>

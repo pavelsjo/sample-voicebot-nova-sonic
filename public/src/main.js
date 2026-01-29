@@ -2247,10 +2247,14 @@ const disconnectConfirm = document.getElementById('disconnect-confirm');
 
 function showDisconnectModal() {
     disconnectModal.classList.add('visible');
+    // Focus the cancel button for accessibility
+    setTimeout(() => disconnectCancel.focus(), 100);
 }
 
 function hideDisconnectModal() {
     disconnectModal.classList.remove('visible');
+    // Return focus to voice button
+    voiceBtn.focus();
 }
 
 disconnectCancel.addEventListener('click', hideDisconnectModal);
