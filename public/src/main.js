@@ -1234,6 +1234,25 @@ function createMessageElement(item) {
             iconWrapper.appendChild(createNovaIcon());
             messageDiv.appendChild(iconWrapper);
         }
+        
+        // Add user avatar for user messages
+        if (roleLowerCase === 'user') {
+            const avatarWrapper = document.createElement('div');
+            avatarWrapper.className = 'user-avatar';
+            const userSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            userSvg.setAttribute('viewBox', '0 0 24 24');
+            userSvg.setAttribute('fill', 'currentColor');
+            const circlePath = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circlePath.setAttribute('cx', '12');
+            circlePath.setAttribute('cy', '8');
+            circlePath.setAttribute('r', '4');
+            const bodyPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            bodyPath.setAttribute('d', 'M12 14c-4 0-8 2-8 4v2h16v-2c0-2-4-4-8-4z');
+            userSvg.appendChild(circlePath);
+            userSvg.appendChild(bodyPath);
+            avatarWrapper.appendChild(userSvg);
+            messageDiv.appendChild(avatarWrapper);
+        }
 
         const content = document.createElement('div');
         content.className = 'message-content';
@@ -1247,11 +1266,23 @@ function createMessageElement(item) {
             content.appendChild(interruptedSpan);
         }
         
+        // Add timestamp
+        const timestamp = document.createElement('span');
+        timestamp.className = 'message-time';
+        timestamp.textContent = formatMessageTime(item.timestamp || Date.now());
+        content.appendChild(timestamp);
+        
         messageDiv.appendChild(content);
 
         return messageDiv;
     }
     return null;
+}
+
+// Format timestamp for messages
+function formatMessageTime(timestamp) {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
 function createToolCard(item) {

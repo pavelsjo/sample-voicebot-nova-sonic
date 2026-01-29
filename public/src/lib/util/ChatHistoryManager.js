@@ -36,14 +36,16 @@ export class ChatHistoryManager {
             // Same role, append to the last turn
             updatedChatHistory[updatedChatHistory.length - 1] = {
                 ...content,
-                message: lastTurn.message + " " + content.message
+                message: lastTurn.message + " " + content.message,
+                timestamp: lastTurn.timestamp // Keep original timestamp
             };
         }
         else {
             // Different role, add a new turn
             updatedChatHistory.push({
                 role: content.role,
-                message: content.message
+                message: content.message,
+                timestamp: Date.now()
             });
         }
 
